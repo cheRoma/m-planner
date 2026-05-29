@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Req, UseGuards } from "@nestjs/common";
+import { Body, Controller, Post, Req, UseGuards, BadRequestException } from "@nestjs/common";
 import { z } from "zod";
 import { JwtGuard } from "../auth/jwt.guard";
 import { ProjectService } from "./project.service";
@@ -16,7 +16,8 @@ export class ProjectController {
 
   @Post()
   async create(@Req() req: any, @Body() body: unknown) {
-    const input = CreateProjectSchema.parse(body);
-    return this.projects.createFromEstimate(req.userId, input);
+    const parsed = CreateProjectSchema.safeParse(body);
+    if (!parsed.success) throw new BadRequestException(parsed.error.flatten());
+    return this.projects.createFromEstimate(req.userId, parsed.data);
   }
 }
