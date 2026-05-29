@@ -1,5 +1,7 @@
 import { Injectable, Inject } from "@nestjs/common";
 import type { PrismaClient } from "@m/db";
+import type { Queue } from "bullmq";
+import type { SliceKey } from "../aggregation/crowd-aggregator";
 
 /**
  * §12.7: exactly one spend_fact per (project, category). Recompute from the
@@ -8,7 +10,10 @@ import type { PrismaClient } from "@m/db";
  */
 @Injectable()
 export class SpendFactService {
-  constructor(@Inject("PRISMA") private readonly prisma: PrismaClient) {}
+  constructor(
+    @Inject("PRISMA") private readonly prisma: PrismaClient,
+    @Inject("AGG_QUEUE") private readonly queue: Queue<SliceKey>,
+  ) {}
 
   async recompute(projectId: string, categoryId: string): Promise<void> {
     const sum = await this.prisma.payment.aggregate({
@@ -29,5 +34,15 @@ export class SpendFactService {
         city: project.city, tier: project.tier, format: project.format, guestCount: project.guestCount,
       },
     });
+    // Enqueue a crowd-benchmark recompute for the affected slice (Plan 2 Task 7 Step 5).
+    const category = await this.prisma.category.findUnique({ where: { id: categoryId } });
+    if (category) {
+      await this.queue.add("slice", {
+        categorySlug: category.slug,
+        city: project.city,
+        tier: project.tier,
+        format: project.format,
+      });
+    }
   }
 }
