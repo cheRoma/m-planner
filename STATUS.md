@@ -104,10 +104,12 @@ Outside voice (Claude-субагент; Codex был недоступен — л
 ## 7. Текущий статус
 
 - ✅ Брейншторм → спек → CEO-ревью → Eng-ревью → 4 плана реализации.
-- ⏳ **Код ещё не написан.** Репозиторий не под git (`git init` — План 1, Task 1).
-- ⏳ Не выбран режим исполнения (subagent-driven vs inline) и не стартовала реализация.
+- ✅ **План 1 реализован и смёржен в main** (subagent-driven, 18 коммитов, merge `46acaf3`, 2026-05-29). Монорепо (pnpm+Turborepo) + `@m/shared` (Money/enums/zod) + `@m/db` (Prisma+seed, Postgres+Redis в Docker) + `@m/api` (NestJS: health, Telegram-initData auth+JWT, `POST /estimate` через k-anon `BenchmarkReader`). Анонимная ₽-смета работает end-to-end (вживую: 80 гостей msk/zags/mid → 1 040 000 ₽, честные seed-метки «Ориентир (2026)»). Тесты: `@m/shared` 7, `@m/api` 17, `@m/db` seed 2 — все зелёные. Прошло spec+quality+final ревью.
+- ⏳ **Планы 2–4 не начаты.** Известный follow-up: production `build`/`start` у `@m/api` (ESM-source-workspace) — см. `docs/TODOS.md [Build]`.
 
-**Следующий шаг:** начать исполнение с **Плана 1** (фундамент: монорепо → Prisma → NestJS → auth → Money → BenchmarkReader → смета). Поднять Docker (postgres+redis) — План 1, Task 4.
+**Запуск dev (локально):** Docker на нестандартных портах (5440/6390) через `infra/docker-compose.yml`; `DATABASE_URL`/`REDIS_URL` в gitignored `.env` (порты заняты другими проектами на сервере). vitest/prisma грузят `.env` сами; dev-сервер — `@swc-node/register` (нужен для NestJS decorator-metadata, esbuild/tsx его не эмитит). Smoke: `set -a; . ./.env; set +a; PORT=3001 pnpm --filter @m/api dev` → `POST /estimate`.
+
+**Следующий шаг:** **План 2** (acquisition-спина: share-петля + OG-лендинг → витрина `/showcase` → save-as-budget → `spend_facts` upsert → crowd-агрегация → rate-limit/кэш → метрики). Перед этим — решить follow-up по prod-сборке, если нужен деплой.
 
 ---
 
