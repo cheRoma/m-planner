@@ -10,11 +10,18 @@ import { AuthController } from "./auth.controller";
     { provide: "PRISMA", useValue: prisma },
     {
       provide: "AUTH_CONFIG",
-      useValue: {
-        botToken: process.env.BOT_TOKEN ?? "",
-        jwtSecret: process.env.JWT_SECRET ?? "dev-secret",
-        jwtTtlSec: 3600,
-        initDataMaxAgeSec: 86400,
+      useFactory: () => {
+        const botToken = process.env.BOT_TOKEN;
+        const jwtSecret = process.env.JWT_SECRET;
+        if (process.env.NODE_ENV === "production" && (!botToken || !jwtSecret)) {
+          throw new Error("BOT_TOKEN and JWT_SECRET must be set in production");
+        }
+        return {
+          botToken: botToken ?? "",
+          jwtSecret: jwtSecret ?? "dev-secret",
+          jwtTtlSec: 3600,
+          initDataMaxAgeSec: 86400,
+        };
       },
     },
   ],

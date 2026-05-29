@@ -30,6 +30,7 @@ export function parseAndVerifyInitData(initData: string, botToken: string, opts:
   const authDateSec = Number(params.get("auth_date"));
   if (!authDateSec) throw new InitDataError("missing auth_date");
   if (opts.nowSec - authDateSec > opts.maxAgeSec) throw new InitDataError("stale initData (replay)");
+  if (authDateSec - opts.nowSec > 60) throw new InitDataError("auth_date in the future");
 
   const userRaw = params.get("user");
   if (!userRaw) throw new InitDataError("missing user");

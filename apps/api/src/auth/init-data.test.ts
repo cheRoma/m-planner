@@ -37,4 +37,10 @@ describe("parseAndVerifyInitData", () => {
     expect(() => parseAndVerifyInitData(stale, BOT_TOKEN, { nowSec: now, maxAgeSec: 86400 }))
       .toThrow(/stale/);
   });
+
+  it("rejects future-dated initData", () => {
+    const future = buildInitData(now + 3600); // 1h in the future
+    expect(() => parseAndVerifyInitData(future, BOT_TOKEN, { nowSec: now, maxAgeSec: 86400 }))
+      .toThrow(/future/);
+  });
 });
