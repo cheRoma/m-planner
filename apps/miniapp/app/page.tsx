@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
-import { fetchEstimate } from "../lib/api";
-import { formatRub, type Money } from "@m/shared";
+import { fetchEstimate, kopecks } from "../lib/api";
+import { formatRub } from "@m/shared";
 
 export default function Home() {
   const [guests, setGuests] = useState(80);
@@ -19,9 +19,9 @@ export default function Home() {
       <button onClick={run}>Посчитать</button>
       {result && (
         <>
-          <h2>{formatRub(BigInt(result.totalMid) as Money)} (диапазон {formatRub(BigInt(result.totalLow) as Money)}–{formatRub(BigInt(result.totalHigh) as Money)})</h2>
+          <h2>{formatRub(kopecks(result.totalMid))} (диапазон {formatRub(kopecks(result.totalLow))}–{formatRub(kopecks(result.totalHigh))})</h2>
           <ul>{result.lines.map((l: any) => (
-            <li key={l.categorySlug}>{l.categorySlug}: {formatRub(BigInt(l.mid) as Money)} <small>({l.label})</small></li>
+            <li key={l.categorySlug}>{l.categorySlug}: {formatRub(kopecks(l.mid))} <small>({l.label})</small></li>
           ))}</ul>
           <a href={shareUrl}>Поделиться</a>
         </>

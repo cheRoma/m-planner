@@ -1,4 +1,18 @@
+import { type Money } from "@m/shared";
+
 const API = process.env.API_URL ?? "http://localhost:3001";
+
+// Safe coercion of a kopeck string/number into a Money BigInt.
+// BigInt(undefined)/BigInt("") throw, which would 500 public SSR routes
+// on malformed/partial API payloads. Degrade to 0n instead.
+export function kopecks(v: unknown): Money {
+  if (v === null || v === undefined || v === "") return 0n as Money;
+  try {
+    return BigInt(v as string | number | bigint) as Money;
+  } catch {
+    return 0n as Money;
+  }
+}
 
 export async function fetchEstimate(body: { city: string; format: string; tier: string; guests: number }) {
   const res = await fetch(`${API}/estimate`, {
