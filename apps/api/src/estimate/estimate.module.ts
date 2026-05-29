@@ -10,7 +10,9 @@ import { EstimateController } from "./estimate.controller";
     BenchmarkReader,
     EstimateService,
     { provide: "PRISMA", useValue: prisma },
-    { provide: "BENCHMARK_CONFIG", useValue: { threshold: Number(process.env.N_THRESHOLD ?? 5) } },
+    // Clamp to a floor of 1: N_THRESHOLD=0 (or NaN) would defeat k-anon by letting
+    // single-sample crowd rows through. Floor of 1 keeps the privacy boundary intact.
+    { provide: "BENCHMARK_CONFIG", useValue: { threshold: Math.max(1, Number(process.env.N_THRESHOLD) || 5) } },
   ],
   exports: [BenchmarkReader, EstimateService],
 })
