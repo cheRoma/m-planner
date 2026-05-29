@@ -14,6 +14,13 @@
 - **Контекст:** Честная маркировка seed vs crowd (§12.4) уже снимает риск обмана. Это про скорость наполнения, не про честность. Идея: при `N < threshold` по полному срезу — деградировать к укрупнённому (`city+format`, затем `+tier`), показывая, насколько агрегат укрупнён.
 - **Depends on:** `BenchmarkReader` (§12.2), объём `spend_facts` из трекера.
 
+## [Build] Production build/start у @m/api (ESM-source-workspace)
+
+- **Что:** `pnpm --filter @m/api build` (tsc) проходит, но `node dist/main.js` (`start`) падает с `ERR_MODULE_NOT_FOUND`: Node ESM требует явные `.js`-расширения в относительных импортах, а workspace-пакеты `@m/shared`/`@m/db` отдают сырой `.ts` через `main`. dev-сервер работает (через `@swc-node/register`), прод-сборка — нет.
+- **Почему:** Нужно для деплоя (Docker/прод). Сейчас не блокирует разработку (dev + тесты зелёные).
+- **Варианты:** (a) бандлить app через tsup/esbuild в один CJS/ESM-файл; (b) собирать `@m/shared`/`@m/db` в JS (`dist`) + `exports`-мапы и указывать `main`/`types` на `dist`; (c) `tsx`/swc-node как прод-рантайм (проще, но без тру-сборки).
+- **Контекст:** Появилось в Плане 1 (NestJS+ESM-source-workspace). Решать перед первым деплоем. См. `apps/api/package.json` (`build`/`start`), `packages/{shared,db}/package.json` (`main` → `./src/index.ts`).
+
 ## [CEO 11.9] Чёрный список подрядчиков (lite)
 
 - **Что:** Лёгкий намёк на боль №1 (доверие) — пометки/жалобы на подрядчиков.
