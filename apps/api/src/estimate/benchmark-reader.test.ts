@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { BenchmarkReader, type Slice } from "./benchmark-reader";
+import { BenchmarkReader, type Slice, type Aggregate } from "./benchmark-reader";
 
 // In-memory fake of the prisma.priceBenchmark.findMany call.
 function fakePrisma(rows: any[]) {
@@ -17,8 +17,8 @@ describe("BenchmarkReader.getAggregates", () => {
       { threshold: 5 },
     );
     const res = await reader.getAggregates(slice, ["banquet"]);
-    expect(res.get("banquet")?.source).toBe("crowd");
-    expect(res.get("banquet")?.median).toBe(20n);
+    expect((res.get("banquet") as Aggregate).source).toBe("crowd");
+    expect((res.get("banquet") as Aggregate).median).toBe(20n);
   });
 
   it("falls back to seed when crowd sampleCount < threshold", async () => {
@@ -30,8 +30,8 @@ describe("BenchmarkReader.getAggregates", () => {
       { threshold: 5 },
     );
     const res = await reader.getAggregates(slice, ["banquet"]);
-    expect(res.get("banquet")?.source).toBe("seed");
-    expect(res.get("banquet")?.median).toBe(15n);
+    expect((res.get("banquet") as Aggregate).source).toBe("seed");
+    expect((res.get("banquet") as Aggregate).median).toBe(15n);
   });
 
   it("returns insufficient when neither crowd>=threshold nor seed exists", async () => {
