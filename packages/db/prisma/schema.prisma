@@ -70,6 +70,7 @@ model PriceBenchmark {
   asOfYear    Int?    @map("as_of_year")
   updatedAt   DateTime @updatedAt @map("updated_at")
   @@id([categoryId, city, tier, source])
+  @@index([city, tier])
   @@map("price_benchmarks")
 }
 
