@@ -1,5 +1,6 @@
 import { Injectable, Inject } from "@nestjs/common";
 import type { PrismaClient } from "@m/db";
+import { ChecklistService } from "../checklist/checklist.service";
 
 export interface CreateProjectInput {
   city: string; format: string; tier: string; guests: number; weddingDate: string;
@@ -8,10 +9,13 @@ export interface CreateProjectInput {
 
 @Injectable()
 export class ProjectService {
-  constructor(@Inject("PRISMA") private readonly prisma: PrismaClient) {}
+  constructor(
+    @Inject("PRISMA") private readonly prisma: PrismaClient,
+    private readonly checklist: ChecklistService,
+  ) {}
 
   async createFromEstimate(userId: string, input: CreateProjectInput): Promise<{ projectId: string }> {
-    return this.prisma.$transaction(async (tx) => {
+    const { projectId } = await this.prisma.$transaction(async (tx) => {
       const project = await tx.weddingProject.create({
         data: {
           ownerId: userId, city: input.city, weddingDate: new Date(input.weddingDate),
@@ -29,5 +33,8 @@ export class ProjectService {
       });
       return { projectId: project.id };
     });
+    // §5.4: instantiate the checklist for the new project (by wedding_date + format branch).
+    await this.checklist.instantiate(projectId);
+    return { projectId };
   }
 }

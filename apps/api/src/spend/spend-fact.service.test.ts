@@ -36,7 +36,7 @@ describe("SpendFactService", () => {
     });
   });
 
-  it("deletes the fact when summed payments are zero/none", async () => {
+  it("deletes the fact when summed payments are zero/none AND enqueues the crowd slice (delete-path staleness fix)", async () => {
     const prisma = fakePrisma();
     const queue = fakeQueue();
     prisma.payment.aggregate.mockResolvedValue({ _sum: { amount: null } });
@@ -44,5 +44,12 @@ describe("SpendFactService", () => {
     await svc.recompute("p1", "c1");
     expect(prisma.spendFact.deleteMany).toHaveBeenCalledWith({ where: { projectId: "p1", categoryId: "c1" } });
     expect(prisma.spendFact.upsert).not.toHaveBeenCalled();
+    // §12.7: zeroing a category must refresh the crowd benchmark for that slice too.
+    expect(queue.add).toHaveBeenCalledWith("slice", {
+      categorySlug: "banquet",
+      city: "msk",
+      tier: "mid",
+      format: "zags",
+    });
   });
 });
