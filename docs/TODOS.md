@@ -9,7 +9,7 @@
 
 Блокеры/важное перед запуском в прод (детали — в секциях ниже + ниже по файлу):
 - [ ] **Контейнерный деплой / ESM-source-workspace** — `pnpm --filter @m/api build` RC=0 локально, но образ требует решения резолюции workspace-пакетов (`@m/shared`/`@m/db` отдают сырой `.ts`). См. [Build].
-- [x] **Server-side consent enforcement (152-ФЗ)** — ✅ СДЕЛАНО (merge `8a3c9f2`). `ConsentGuard` (`apps/api/src/consent/consent.guard.ts`) на `ProjectController` после `JwtGuard`: нет consent → 403. Доказано рантаймом (POST /projects без consent→403, после POST /consent→201). Покрывает создание проекта = точку первого хранения перс.данных (budget/checklist/invite требуют существующего проекта).
+- [x] **Server-side consent enforcement (152-ФЗ)** — ✅ СДЕЛАНО (merge `8442153` + fix `b6f3e9f`). `ConsentGuard` (`apps/api/src/consent/consent.guard.ts`) на `ProjectController` после `JwtGuard`: нет consent → 403. Доказано рантаймом (POST /projects без consent→403, POST /consent→201, затем POST /projects→201). Покрывает создание проекта = точку первого хранения перс.данных (budget/checklist/invite требуют существующего проекта).
 - [ ] **ЗАГС human-verify-before-launch** — named owner сверяет `checklist_templates(kind=zags)` МСК+СПб по рег-источникам (source_url сейчас на корни mos.ru/gu.spb.ru, не на конкретные правила). §12.12.
 - [ ] **Платёж+recompute → outbox** — не транзакционны (см. ниже).
 - [ ] **miniapp share-URL** → `NEXT_PUBLIC_WEB_URL` (см. ниже).
