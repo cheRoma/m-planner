@@ -11,6 +11,7 @@ import { ConsentGuard } from "./consent.guard";
     ConsentGuard,
     { provide: "PRISMA", useValue: prisma },
     { provide: "CLOCK", useValue: { nowMs: () => Date.now() } },
+    { provide: "AUTH_CONFIG", useValue: { jwtSecret: process.env.JWT_SECRET ?? "dev-secret" } },
   ],
   exports: [ConsentService, ConsentGuard],
 })
