@@ -5,9 +5,10 @@ import { EstimateModule } from "./estimate/estimate.module";
 import { ProjectModule } from "./project/project.module";
 import { ShowcaseModule } from "./showcase/showcase.module";
 import { MetricsModule } from "./metrics/metrics.module";
+import { BudgetModule } from "./budget/budget.module";
 
 @Module({
-  imports: [AuthModule, EstimateModule, ProjectModule, ShowcaseModule, MetricsModule],
+  imports: [AuthModule, EstimateModule, ProjectModule, ShowcaseModule, MetricsModule, BudgetModule],
   controllers: [HealthController],
 })
 export class AppModule {}
