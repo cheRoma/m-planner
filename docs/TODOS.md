@@ -5,6 +5,20 @@
 
 ---
 
+## 🚀 Pre-prod чеклист (v1 кодом готов, merge `2c84727`)
+
+Блокеры/важное перед запуском в прод (детали — в секциях ниже + ниже по файлу):
+- [ ] **Контейнерный деплой / ESM-source-workspace** — `pnpm --filter @m/api build` RC=0 локально, но образ требует решения резолюции workspace-пакетов (`@m/shared`/`@m/db` отдают сырой `.ts`). См. [Build].
+- [ ] **Server-side consent enforcement (152-ФЗ)** — consent сейчас только записывается (`ConsentService`), не enforced. Добавить guard, требующий `ConsentService.has(userId)` перед созданием проекта → 403. Прямой API-вызов сейчас обходит.
+- [ ] **ЗАГС human-verify-before-launch** — named owner сверяет `checklist_templates(kind=zags)` МСК+СПб по рег-источникам (source_url сейчас на корни mos.ru/gu.spb.ru, не на конкретные правила). §12.12.
+- [ ] **Платёж+recompute → outbox** — не транзакционны (см. ниже).
+- [ ] **miniapp share-URL** → `NEXT_PUBLIC_WEB_URL` (см. ниже).
+- [ ] **reminder send-hour** — `reminderAt` сейчас 03:00 МСК (артефакт UTC-полуночи weddingDate) + нет skip past-reminders. Нормализовать send-hour, пропускать прошедшие.
+- [ ] **AggregationModule worker не смонтирован** в AppModule (Plan 2) — crowd-recompute enqueue'ится (BudgetModule queue-only), но воркер не крутится в api-процессе. Смонтировать отдельный worker-процесс или добавить в API.
+- [ ] Реальный `BOT_TOKEN`, домен, прод-`.env`, сидинг seed-цен (кастдев).
+
+---
+
 ## [Eng OV#1] Cold-start моата: цель по spend_facts + укрупнённые срезы
 
 - **Что:** До того как полагаться на crowd-витрину как на реальный канал/соцдоказательство — задать конкретный целевой объём `spend_facts` по срезам и стратегию укрупнения срезов при малых N.
