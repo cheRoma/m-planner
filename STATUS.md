@@ -114,7 +114,7 @@ Outside voice (Claude-субагент; Codex был недоступен — л
 
 **Запуск dev (локально):** Docker на нестандартных портах (5440/6390) через `infra/docker-compose.yml`; `DATABASE_URL`/`REDIS_URL` в gitignored `.env` (порты заняты другими проектами на сервере). vitest/prisma грузят `.env` сами; dev-сервер — `@swc-node/register` (нужен для NestJS decorator-metadata, esbuild/tsx его не эмитит). Smoke: `set -a; . ./.env; set +a; PORT=3001 pnpm --filter @m/api dev` → `POST /estimate`.
 
-**Следующий шаг:** **План 3** (планировщик: бюджет-трекер + optimistic-lock на финансах → платежи (тут подключается `SpendFactService.recompute`) → делегирование партнёру (инвайт-токен) → ЗАГС/таймлайн-чеклист → камерный режим). Перед деплоем — решить follow-up по prod-сборке `@m/api`.
+**Следующий шаг:** **План 4** (напоминания + комплаенс: BullMQ-планировщик → grammY-бот доставка с retries/429/blocked + статус → fallback-view + ack-дедуп → 152-ФЗ consent + delete-cascade → seed-refresh → 3 крит. integration-теста). Тут же закрыть outbox-транзакционность платёж+recompute. Перед деплоем — prod-сборка `@m/api`.
 
 ---
 

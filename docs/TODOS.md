@@ -21,6 +21,17 @@
 - **Варианты:** (a) бандлить app через tsup/esbuild в один CJS/ESM-файл; (b) собирать `@m/shared`/`@m/db` в JS (`dist`) + `exports`-мапы и указывать `main`/`types` на `dist`; (c) `tsx`/swc-node как прод-рантайм (проще, но без тру-сборки).
 - **Контекст:** Появилось в Плане 1 (NestJS+ESM-source-workspace). Решать перед первым деплоем. См. `apps/api/package.json` (`build`/`start`), `packages/{shared,db}/package.json` (`main` → `./src/index.ts`).
 
+## [Plan 3 → Plan 4] Транзакционность платёж + spend_fact recompute (outbox)
+
+- **Что:** `PaymentService.addPayment/deletePayment/updatePayment` сначала коммитят платёж, затем вызывают `SpendFactService.recompute` (который enqueue'ит crowd-пересчёт). Эти два шага НЕ в одной транзакции: если recompute/enqueue упадёт (Redis down), платёж уже сохранён, API вернёт 500, а spend_fact/crowd-бенчмарк останется устаревшим.
+- **Почему:** Финансовый путь; при сбое инфры — тихая рассинхронизация моат-данных.
+- **Варианты:** (a) обернуть `payment.create` + spend_fact-апдейт в один `prisma.$transaction`, а enqueue сделать after-commit/outbox-шагом (failure enqueue не валит коммит); (b) transactional outbox-таблица + воркер. Естественно решать в Плане 4 вместе с durable-доставкой напоминаний (тот же паттерн).
+- **Контекст:** Поймано финальным ревью Плана 3. Не блокер (нет коррупции, только transient-staleness), но закрыть до реальных пользователей. См. `apps/api/src/budget/payment.service.ts`.
+
+## [Plan 3] Authz-паттерн: assertMember на ресурсных эндпоинтах
+
+- **Что:** Введён `apps/api/src/auth/assert-member.ts` — проверка членства в проекте перед доступом к budget/checklist. **Правило для будущих ресурсных эндпоинтов:** `JwtGuard` даёт только личность; любой эндпоинт с `:projectId`/`:itemId` обязан звать `assertMember(prisma, projectId, userId)` (или резолвить projectId и звать) — иначе любой залогиненный юзер дотянется до чужого проекта. Финальное ревью Плана 3 поймало эту дыру (budget/checklist были без проверки) — не повторять в Плане 4 (reminder/consent/deadlines-эндпоинты тоже ресурсные).
+
 ## [CEO 11.9] Чёрный список подрядчиков (lite)
 
 - **Что:** Лёгкий намёк на боль №1 (доверие) — пометки/жалобы на подрядчиков.
