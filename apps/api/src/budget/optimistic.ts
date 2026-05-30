@@ -9,7 +9,7 @@ interface VersionedDelegate {
  * §12.6: optimistic lock on financial rows. UPDATE ... WHERE id AND version;
  * 0 rows affected → someone edited concurrently → 409 (client must reload).
  */
-export async function updateWithVersion<T>(
+export async function updateWithVersion<T = any>(
   delegate: VersionedDelegate, id: string, expectedVersion: number, data: Record<string, unknown>,
 ): Promise<T> {
   const res = await delegate.updateMany({
