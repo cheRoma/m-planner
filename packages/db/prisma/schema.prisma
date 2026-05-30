@@ -12,6 +12,7 @@ model User {
   telegramId    BigInt           @unique @map("telegram_id")
   name          String?
   tz            String           @default("Europe/Moscow")
+  consentAt     DateTime?        @map("consent_at")
   createdAt     DateTime         @default(now()) @map("created_at")
   ownedProjects WeddingProject[] @relation("owner")
   memberships   ProjectMember[]
