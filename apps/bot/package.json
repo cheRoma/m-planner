@@ -1,0 +1,8 @@
+{
+  "name": "@m/bot",
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": { "dev": "tsx watch src/main.ts", "build": "tsc", "test": "vitest run", "typecheck": "tsc --noEmit" },
+  "dependencies": { "grammy": "^1.30.0", "@m/db": "workspace:*" },
+  "devDependencies": { "typescript": "^5.5.0", "tsx": "^4.16.0", "vitest": "^2.0.0", "@types/node": "^22" }
+}
