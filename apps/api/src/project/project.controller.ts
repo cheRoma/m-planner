@@ -1,6 +1,7 @@
 import { Body, Controller, Post, Req, UseGuards, BadRequestException } from "@nestjs/common";
 import { z } from "zod";
 import { JwtGuard } from "../auth/jwt.guard";
+import { ConsentGuard } from "../consent/consent.guard";
 import { ProjectService } from "./project.service";
 import { MetricsService } from "../metrics/metrics.service";
 
@@ -11,7 +12,7 @@ const CreateProjectSchema = z.object({
 });
 
 @Controller("projects")
-@UseGuards(JwtGuard)
+@UseGuards(JwtGuard, ConsentGuard)
 export class ProjectController {
   constructor(
     private readonly projects: ProjectService,
