@@ -11,8 +11,9 @@ const fakePrisma = {
 } as any;
 
 describe("ProjectService.createFromEstimate", () => {
-  it("creates project, owner membership, and budget items per estimate line", async () => {
-    const svc = new ProjectService(fakePrisma);
+  it("creates project, owner membership, budget items, and instantiates the checklist", async () => {
+    const checklist = { instantiate: vi.fn(async () => {}) } as any;
+    const svc = new ProjectService(fakePrisma, checklist);
     const res = await svc.createFromEstimate("u1", {
       city: "msk", format: "zags", tier: "mid", guests: 80, weddingDate: "2026-09-01",
       lines: [
@@ -25,5 +26,6 @@ describe("ProjectService.createFromEstimate", () => {
       expect.objectContaining({ data: expect.objectContaining({ role: "owner", userId: "u1" }) }),
     );
     expect(fakePrisma.budgetItem.createMany).toHaveBeenCalled();
+    expect(checklist.instantiate).toHaveBeenCalledWith("p1");
   });
 });
