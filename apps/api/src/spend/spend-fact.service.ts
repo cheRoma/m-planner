@@ -21,11 +21,15 @@ export class SpendFactService {
       where: { budgetItem: { projectId, categoryId } },
     });
     const total = sum._sum.amount;
+    const project = await this.prisma.weddingProject.findUniqueOrThrow({ where: { id: projectId } });
+
     if (!total || total <= 0n) {
+      // Delete-path: a removed/zeroed payment must drop the fact AND refresh the
+      // crowd benchmark for that slice — otherwise the benchmark stays stale (§12.7).
       await this.prisma.spendFact.deleteMany({ where: { projectId, categoryId } });
+      await this.enqueueSlice(categoryId, project);
       return;
     }
-    const project = await this.prisma.weddingProject.findUniqueOrThrow({ where: { id: projectId } });
     await this.prisma.spendFact.upsert({
       where: { projectId_categoryId: { projectId, categoryId } },
       update: { amount: total, city: project.city, tier: project.tier, format: project.format, guestCount: project.guestCount },
@@ -34,7 +38,14 @@ export class SpendFactService {
         city: project.city, tier: project.tier, format: project.format, guestCount: project.guestCount,
       },
     });
-    // Enqueue a crowd-benchmark recompute for the affected slice (Plan 2 Task 7 Step 5).
+    await this.enqueueSlice(categoryId, project);
+  }
+
+  // Enqueue a crowd-benchmark recompute for the affected slice (Plan 2 Task 7 Step 5).
+  private async enqueueSlice(
+    categoryId: string,
+    project: { city: string; tier: string; format: string },
+  ): Promise<void> {
     const category = await this.prisma.category.findUnique({ where: { id: categoryId } });
     if (category) {
       await this.queue.add("slice", {
