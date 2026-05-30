@@ -12,8 +12,8 @@ export class InviteController {
   constructor(private readonly invites: InviteService) {}
 
   @Post("projects/:id/invite")
-  async create(@Param("id") projectId: string) {
-    const { token, expiresAt } = await this.invites.create(projectId, 7);
+  async create(@Req() req: any, @Param("id") projectId: string) {
+    const { token, expiresAt } = await this.invites.create(projectId, req.userId, 7);
     const link = `https://t.me/${process.env.BOT_USERNAME ?? "mplanner_bot"}?startapp=invite_${token}`;
     return { token, link, expiresAt };
   }
@@ -26,10 +26,10 @@ export class InviteController {
   }
 
   @Post("invite/revoke")
-  async revoke(@Body() body: unknown) {
+  async revoke(@Req() req: any, @Body() body: unknown) {
     const parsed = RevokeBody.safeParse(body);
     if (!parsed.success) throw new BadRequestException(parsed.error.flatten());
-    await this.invites.revoke(parsed.data.token);
+    await this.invites.revoke(parsed.data.token, req.userId);
     return { ok: true };
   }
 }
