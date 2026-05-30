@@ -2,8 +2,10 @@ import { Module } from "@nestjs/common";
 import { prisma } from "@m/db";
 import { ProjectService } from "./project.service";
 import { ProjectController } from "./project.controller";
+import { ChecklistModule } from "../checklist/checklist.module";
 
 @Module({
+  imports: [ChecklistModule],
   controllers: [ProjectController],
   providers: [
     ProjectService,
