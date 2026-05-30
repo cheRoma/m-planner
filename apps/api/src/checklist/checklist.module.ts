@@ -2,8 +2,10 @@ import { Module } from "@nestjs/common";
 import { prisma } from "@m/db";
 import { ChecklistService } from "./checklist.service";
 import { ChecklistController } from "./checklist.controller";
+import { NotificationModule } from "../notification/notification.module";
 
 @Module({
+  imports: [NotificationModule], // provides ReminderScheduler for instantiate()
   controllers: [ChecklistController],
   providers: [
     ChecklistService,

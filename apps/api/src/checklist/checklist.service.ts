@@ -3,13 +3,17 @@ import type { PrismaClient } from "@m/db";
 import type { City, WeddingFormat } from "@m/shared";
 import { checklistKeysForFormat } from "../estimate/format-profile";
 import { assertMember } from "../auth/assert-member";
+import { ReminderScheduler } from "../notification/reminder-scheduler";
 
 const DAY_MS = 86400 * 1000;
 const REMINDER_LEAD_DAYS = 3; // напомнить за 3 дня до due_date
 
 @Injectable()
 export class ChecklistService {
-  constructor(@Inject("PRISMA") private readonly prisma: PrismaClient) {}
+  constructor(
+    @Inject("PRISMA") private readonly prisma: PrismaClient,
+    private readonly scheduler: ReminderScheduler,
+  ) {}
 
   async instantiate(projectId: string): Promise<void> {
     const project = await this.prisma.weddingProject.findUniqueOrThrow({ where: { id: projectId } });
@@ -22,6 +26,13 @@ export class ChecklistService {
       return { projectId, templateKey: t.key, title: t.title, dueDate, reminderAt };
     });
     await this.prisma.checklistItem.createMany({ data });
+
+    // Schedule a reminder for each created item that has a reminder_at.
+    // createMany does not return rows, so load them back by projectId.
+    const created = await this.prisma.checklistItem.findMany({ where: { projectId } });
+    for (const item of created) {
+      if (item.reminderAt) await this.scheduler.schedule({ id: item.id, reminderAt: item.reminderAt });
+    }
   }
 
   async list(projectId: string, userId: string) {

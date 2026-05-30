@@ -10,9 +10,10 @@ import { InviteModule } from "./invite/invite.module";
 import { ChecklistModule } from "./checklist/checklist.module";
 import { ConsentModule } from "./consent/consent.module";
 import { DeletionModule } from "./gdpr/deletion.module";
+import { NotificationModule } from "./notification/notification.module";
 
 @Module({
-  imports: [AuthModule, EstimateModule, ProjectModule, ShowcaseModule, MetricsModule, BudgetModule, InviteModule, ChecklistModule, ConsentModule, DeletionModule],
+  imports: [AuthModule, EstimateModule, ProjectModule, ShowcaseModule, MetricsModule, BudgetModule, InviteModule, ChecklistModule, ConsentModule, DeletionModule, NotificationModule],
   controllers: [HealthController],
 })
 export class AppModule {}
