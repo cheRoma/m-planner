@@ -3,9 +3,10 @@ import { prisma } from "@m/db";
 import { ProjectService } from "./project.service";
 import { ProjectController } from "./project.controller";
 import { ChecklistModule } from "../checklist/checklist.module";
+import { ConsentModule } from "../consent/consent.module";
 
 @Module({
-  imports: [ChecklistModule],
+  imports: [ChecklistModule, ConsentModule],
   controllers: [ProjectController],
   providers: [
     ProjectService,
