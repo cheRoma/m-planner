@@ -5,7 +5,7 @@ import { ReminderScheduler } from "./reminder-scheduler";
 import { ReminderDelivery, type SendFn } from "./reminder-delivery";
 import { DeadlinesService } from "./deadlines.service";
 import { NotificationController } from "./notification.controller";
-import { sendReminder, makeBot } from "@m/bot";
+import { sendReminder, telegramFetchSender } from "@m/shared";
 
 const REMINDER_QUEUE = "reminders";
 function conn() { const u = new URL(process.env.REDIS_URL ?? "redis://localhost:6379"); return { host: u.hostname, port: Number(u.port || 6379) }; }
@@ -19,12 +19,12 @@ function conn() { const u = new URL(process.env.REDIS_URL ?? "redis://localhost:
     { provide: "AUTH_CONFIG", useValue: { jwtSecret: process.env.JWT_SECRET ?? "dev-secret" } },
     { provide: "REMINDER_QUEUE", useFactory: () => new Queue(REMINDER_QUEUE, { connection: conn() }) },
     { provide: "SEND_FN", useFactory: (): SendFn => {
-        // Guard: with an empty token, do NOT construct a real Bot (and never hit Telegram
-        // during tests). A no-op send keeps AppModule bootstrap green for e2e suites.
-        const token = process.env.BOT_TOKEN ?? "";
+        // Guard: with an empty token, do NOT construct a real sender (and never hit
+        // Telegram during tests). A no-op send keeps AppModule bootstrap green for e2e.
+        const token = process.env.BOT_TOKEN;
         if (!token) return async () => "sent" as const;
-        const api = makeBot(token).api;
-        return (telegramId: number, text: string) => sendReminder(api, telegramId, text);
+        const sender = telegramFetchSender(token);
+        return (telegramId: number, text: string) => sendReminder(sender, telegramId, text);
       } },
   ],
   exports: [ReminderScheduler, "REMINDER_QUEUE"],

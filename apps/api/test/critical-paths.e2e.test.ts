@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { ForbiddenException } from "@nestjs/common";
 import { prisma } from "@m/db";
-import { BotBlockedError } from "@m/bot";
+import { BotBlockedError } from "@m/shared";
 import { seed } from "../../../packages/db/prisma/seed";
 import { ReminderDelivery } from "../src/notification/reminder-delivery";
 import { BenchmarkReader } from "../src/estimate/benchmark-reader";

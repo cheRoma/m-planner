@@ -1,1 +1,1 @@
-{ "extends": "../../tsconfig.base.json", "compilerOptions": { "outDir": "dist", "rootDir": "src", "module": "ESNext", "moduleResolution": "Node", "baseUrl": ".", "paths": { "@m/bot": ["../bot/dist/index.d.ts"] } }, "include": ["src"], "exclude": ["**/*.test.ts"] }
+{ "extends": "../../tsconfig.base.json", "compilerOptions": { "outDir": "dist", "rootDir": "src", "module": "ESNext", "moduleResolution": "Node", "baseUrl": "." }, "include": ["src"], "exclude": ["**/*.test.ts"] }

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { ReminderDelivery } from "./reminder-delivery";
-import { BotBlockedError, BotRateLimitError } from "@m/bot";
+import { BotBlockedError, BotRateLimitError } from "@m/shared";
 
 function fakePrisma() {
   return {
