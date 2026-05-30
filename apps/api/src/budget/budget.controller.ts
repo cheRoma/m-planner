@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Param, Patch, Post, UseGuards, BadRequestException } from "@nestjs/common";
+import { Body, Controller, Delete, Param, Patch, Post, Req, UseGuards, BadRequestException } from "@nestjs/common";
 import { z } from "zod";
 import { JwtGuard } from "../auth/jwt.guard";
 import { BudgetService } from "./budget.service";
@@ -14,29 +14,29 @@ export class BudgetController {
   constructor(private readonly budget: BudgetService, private readonly payments: PaymentService) {}
 
   @Post("projects/:id/items")
-  addItem(@Param("id") projectId: string, @Body() body: unknown) {
+  addItem(@Param("id") projectId: string, @Body() body: unknown, @Req() req: { userId: string }) {
     const parsed = AddItem.safeParse(body);
     if (!parsed.success) throw new BadRequestException(parsed.error.flatten());
-    return this.budget.addItem(projectId, parsed.data);
+    return this.budget.addItem(projectId, req.userId, parsed.data);
   }
 
   @Patch("items/:itemId")
-  patchItem(@Param("itemId") itemId: string, @Body() body: unknown) {
+  patchItem(@Param("itemId") itemId: string, @Body() body: unknown, @Req() req: { userId: string }) {
     const parsed = PatchItem.safeParse(body);
     if (!parsed.success) throw new BadRequestException(parsed.error.flatten());
     const { version, ...patch } = parsed.data;
-    return this.budget.updateItem(itemId, version, patch);
+    return this.budget.updateItem(itemId, req.userId, version, patch);
   }
 
   @Post("items/:itemId/payments")
-  addPayment(@Param("itemId") itemId: string, @Body() body: unknown) {
+  addPayment(@Param("itemId") itemId: string, @Body() body: unknown, @Req() req: { userId: string }) {
     const parsed = AddPayment.safeParse(body);
     if (!parsed.success) throw new BadRequestException(parsed.error.flatten());
-    return this.payments.addPayment(itemId, parsed.data);
+    return this.payments.addPayment(itemId, req.userId, parsed.data);
   }
 
   @Delete("payments/:paymentId")
-  deletePayment(@Param("paymentId") paymentId: string) {
-    return this.payments.deletePayment(paymentId);
+  deletePayment(@Param("paymentId") paymentId: string, @Req() req: { userId: string }) {
+    return this.payments.deletePayment(paymentId, req.userId);
   }
 }

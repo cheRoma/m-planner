@@ -2,6 +2,7 @@ import { Injectable, Inject } from "@nestjs/common";
 import type { PrismaClient } from "@m/db";
 import type { City, WeddingFormat } from "@m/shared";
 import { checklistKeysForFormat } from "../estimate/format-profile";
+import { assertMember } from "../auth/assert-member";
 
 const DAY_MS = 86400 * 1000;
 const REMINDER_LEAD_DAYS = 3; // напомнить за 3 дня до due_date
@@ -23,7 +24,14 @@ export class ChecklistService {
     await this.prisma.checklistItem.createMany({ data });
   }
 
-  async list(projectId: string) {
+  async list(projectId: string, userId: string) {
+    await assertMember(this.prisma, projectId, userId);
     return this.prisma.checklistItem.findMany({ where: { projectId }, orderBy: { dueDate: "asc" } });
+  }
+
+  async setDone(itemId: string, userId: string, done: boolean) {
+    const item = await this.prisma.checklistItem.findUniqueOrThrow({ where: { id: itemId } });
+    await assertMember(this.prisma, item.projectId, userId);
+    return this.prisma.checklistItem.update({ where: { id: itemId }, data: { done } });
   }
 }

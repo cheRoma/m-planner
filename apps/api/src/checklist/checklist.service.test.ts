@@ -1,11 +1,20 @@
 import { describe, it, expect, vi } from "vitest";
+import { ForbiddenException } from "@nestjs/common";
 import { ChecklistService } from "./checklist.service";
 
 function fakePrisma(templates: any[]) {
   return {
     weddingProject: { findUniqueOrThrow: vi.fn(async () => ({ id: "p1", city: "msk", format: "zags", weddingDate: new Date("2026-09-01") })) },
     checklistTemplate: { findMany: vi.fn(async () => templates) },
-    checklistItem: { createMany: vi.fn(async () => ({ count: templates.length })), findMany: vi.fn(async () => []) },
+    checklistItem: {
+      createMany: vi.fn(async () => ({ count: templates.length })),
+      findMany: vi.fn(async () => []),
+      findUniqueOrThrow: vi.fn(async () => ({ id: "ci1", projectId: "p1" })),
+      update: vi.fn(async ({ data }: any) => ({ id: "ci1", projectId: "p1", ...data })),
+    },
+    projectMember: {
+      findUnique: vi.fn(async () => ({ projectId: "p1", userId: "u1", role: "owner" })),
+    },
   } as any;
 }
 
@@ -32,5 +41,37 @@ describe("ChecklistService.instantiate", () => {
     // book_host not requested for kamernaya → findMany called with keys excluding it
     const where = prisma.checklistTemplate.findMany.mock.calls[0][0].where;
     expect(where.key.in).not.toContain("book_host");
+  });
+});
+
+describe("ChecklistService authz", () => {
+  it("lists items for a member", async () => {
+    const prisma = fakePrisma([]);
+    const svc = new ChecklistService(prisma);
+    await svc.list("p1", "u1");
+    expect(prisma.checklistItem.findMany).toHaveBeenCalledWith({ where: { projectId: "p1" }, orderBy: { dueDate: "asc" } });
+  });
+
+  it("rejects list for a non-member with ForbiddenException", async () => {
+    const prisma = fakePrisma([]);
+    prisma.projectMember.findUnique.mockResolvedValue(null);
+    const svc = new ChecklistService(prisma);
+    await expect(svc.list("p1", "intruder")).rejects.toBeInstanceOf(ForbiddenException);
+    expect(prisma.checklistItem.findMany).not.toHaveBeenCalled();
+  });
+
+  it("sets done for a member via the service", async () => {
+    const prisma = fakePrisma([]);
+    const svc = new ChecklistService(prisma);
+    await svc.setDone("ci1", "u1", true);
+    expect(prisma.checklistItem.update).toHaveBeenCalledWith({ where: { id: "ci1" }, data: { done: true } });
+  });
+
+  it("rejects setDone for a non-member with ForbiddenException", async () => {
+    const prisma = fakePrisma([]);
+    prisma.projectMember.findUnique.mockResolvedValue(null);
+    const svc = new ChecklistService(prisma);
+    await expect(svc.setDone("ci1", "intruder", true)).rejects.toBeInstanceOf(ForbiddenException);
+    expect(prisma.checklistItem.update).not.toHaveBeenCalled();
   });
 });
