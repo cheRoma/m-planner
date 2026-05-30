@@ -8,138 +8,162 @@ datasource db {
 }
 
 model User {
-  id         String   @id @default(cuid())
-  telegramId BigInt   @unique @map("telegram_id")
-  name       String?
-  tz         String   @default("Europe/Moscow")
-  createdAt  DateTime @default(now()) @map("created_at")
+  id            String           @id @default(cuid())
+  telegramId    BigInt           @unique @map("telegram_id")
+  name          String?
+  tz            String           @default("Europe/Moscow")
+  createdAt     DateTime         @default(now()) @map("created_at")
   ownedProjects WeddingProject[] @relation("owner")
   memberships   ProjectMember[]
+
   @@map("users")
 }
 
 model WeddingProject {
-  id                 String   @id @default(cuid())
-  ownerId            String   @map("owner_id")
-  owner              User     @relation("owner", fields: [ownerId], references: [id])
-  city               String
-  weddingDate        DateTime @map("wedding_date")
-  format             String   // zags|vyezdnaya|kamernaya
-  guestCount         Int      @map("guest_count")
-  tier               String   // budget|mid|premium
-  zagsApplicationDate DateTime? @map("zags_application_date")
-  createdAt          DateTime @default(now()) @map("created_at")
-  members     ProjectMember[]
-  budgetItems BudgetItem[]
-  checklistItems ChecklistItem[]
+  inviteTokens        InviteToken[]
+  id                  String          @id @default(cuid())
+  ownerId             String          @map("owner_id")
+  owner               User            @relation("owner", fields: [ownerId], references: [id])
+  city                String
+  weddingDate         DateTime        @map("wedding_date")
+  format              String // zags|vyezdnaya|kamernaya
+  guestCount          Int             @map("guest_count")
+  tier                String // budget|mid|premium
+  zagsApplicationDate DateTime?       @map("zags_application_date")
+  createdAt           DateTime        @default(now()) @map("created_at")
+  members             ProjectMember[]
+  budgetItems         BudgetItem[]
+  checklistItems      ChecklistItem[]
+
   @@map("wedding_projects")
 }
 
 model ProjectMember {
-  projectId String @map("project_id")
-  userId    String @map("user_id")
+  projectId String         @map("project_id")
+  userId    String         @map("user_id")
   role      String // owner|partner
   project   WeddingProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
   user      User           @relation(fields: [userId], references: [id])
+
   @@id([projectId, userId])
   @@map("project_members")
 }
 
 model Category {
-  id    String @id @default(cuid())
-  slug  String @unique
-  name  String
-  unit  String // per_guest|fixed
-  sort  Int
-  benchmarks PriceBenchmark[]
+  id          String           @id @default(cuid())
+  slug        String           @unique
+  name        String
+  unit        String // per_guest|fixed
+  sort        Int
+  benchmarks  PriceBenchmark[]
   budgetItems BudgetItem[]
   spendFacts  SpendFact[]
+
   @@map("categories")
 }
 
 model PriceBenchmark {
-  categoryId  String  @map("category_id")
+  categoryId  String   @map("category_id")
   category    Category @relation(fields: [categoryId], references: [id])
   city        String
   tier        String
-  source      String  // seed|crowd
-  p25         BigInt  // kopecks
+  source      String // seed|crowd
+  p25         BigInt // kopecks
   median      BigInt
   p75         BigInt
-  sampleCount Int     @map("sample_count")
-  asOfYear    Int?    @map("as_of_year")
+  sampleCount Int      @map("sample_count")
+  asOfYear    Int?     @map("as_of_year")
   updatedAt   DateTime @updatedAt @map("updated_at")
+
   @@id([categoryId, city, tier, source])
   @@index([city, tier])
   @@map("price_benchmarks")
 }
 
 model BudgetItem {
-  id           String  @id @default(cuid())
-  projectId    String  @map("project_id")
-  project      WeddingProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  categoryId   String  @map("category_id")
-  category     Category @relation(fields: [categoryId], references: [id])
-  vendorName   String? @map("vendor_name")
-  plannedAmount BigInt @map("planned_amount") // kopecks
-  status       String  @default("planned")
-  version      Int     @default(0)            // optimistic lock (Plan 3)
-  payments     Payment[]
+  id            String         @id @default(cuid())
+  projectId     String         @map("project_id")
+  project       WeddingProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  categoryId    String         @map("category_id")
+  category      Category       @relation(fields: [categoryId], references: [id])
+  vendorName    String?        @map("vendor_name")
+  plannedAmount BigInt         @map("planned_amount") // kopecks
+  status        String         @default("planned")
+  version       Int            @default(0) // optimistic lock (Plan 3)
+  payments      Payment[]
+
   @@map("budget_items")
 }
 
 model Payment {
-  id           String  @id @default(cuid())
-  budgetItemId String  @map("budget_item_id")
+  id           String     @id @default(cuid())
+  budgetItemId String     @map("budget_item_id")
   budgetItem   BudgetItem @relation(fields: [budgetItemId], references: [id], onDelete: Cascade)
-  type         String  // prepay|balance|full
-  amount       BigInt  // kopecks
-  dueDate      DateTime? @map("due_date")
-  paidAt       DateTime? @map("paid_at")
-  payer        String  // couple|parents|other
-  version      Int     @default(0)            // optimistic lock (Plan 3)
+  type         String // prepay|balance|full
+  amount       BigInt // kopecks
+  dueDate      DateTime?  @map("due_date")
+  paidAt       DateTime?  @map("paid_at")
+  payer        String // couple|parents|other
+  version      Int        @default(0) // optimistic lock (Plan 3)
+
   @@map("payments")
 }
 
 model SpendFact {
   id         String   @id @default(cuid())
-  projectId  String   @map("project_id")   // for upsert/delete only — EXCLUDED from aggregates
+  projectId  String   @map("project_id") // for upsert/delete only — EXCLUDED from aggregates
   categoryId String   @map("category_id")
   category   Category @relation(fields: [categoryId], references: [id])
   city       String
   tier       String
   format     String
   guestCount Int      @map("guest_count")
-  amount     BigInt   // kopecks (final summed value per project+category)
+  amount     BigInt // kopecks (final summed value per project+category)
   createdAt  DateTime @default(now()) @map("created_at")
-  @@unique([projectId, categoryId])         // one fact per project+category (Plan 2)
+
+  @@unique([projectId, categoryId]) // one fact per project+category (Plan 2)
   @@index([categoryId, city, tier, format])
   @@map("spend_facts")
 }
 
 model ChecklistTemplate {
-  key         String  @id
-  title       String
-  kind        String  // zags|vendor|general
-  offsetDaysBeforeWedding Int @map("offset_days_before_wedding")
-  city        String? // null = all cities; set for zags compliance (Plan 3)
-  sourceUrl   String? @map("source_url")
-  reviewDate  DateTime? @map("review_date")
-  items ChecklistItem[]
+  key                     String          @id
+  title                   String
+  kind                    String // zags|vendor|general
+  offsetDaysBeforeWedding Int             @map("offset_days_before_wedding")
+  city                    String? // null = all cities; set for zags compliance (Plan 3)
+  sourceUrl               String?         @map("source_url")
+  reviewDate              DateTime?       @map("review_date")
+  items                   ChecklistItem[]
+
   @@map("checklist_templates")
 }
 
 model ChecklistItem {
-  id          String   @id @default(cuid())
-  projectId   String   @map("project_id")
-  project     WeddingProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  templateKey String   @map("template_key")
-  template    ChecklistTemplate @relation(fields: [templateKey], references: [key])
-  title       String
-  dueDate     DateTime @map("due_date")
-  done        Boolean  @default(false)
-  reminderAt  DateTime? @map("reminder_at")
-  reminderStatus String? @map("reminder_status") // sent|failed|blocked (Plan 4)
-  ackAt       DateTime? @map("ack_at")            // dedup across channels (Plan 4)
+  id             String            @id @default(cuid())
+  projectId      String            @map("project_id")
+  project        WeddingProject    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  templateKey    String            @map("template_key")
+  template       ChecklistTemplate @relation(fields: [templateKey], references: [key])
+  title          String
+  dueDate        DateTime          @map("due_date")
+  done           Boolean           @default(false)
+  reminderAt     DateTime?         @map("reminder_at")
+  reminderStatus String?           @map("reminder_status") // sent|failed|blocked (Plan 4)
+  ackAt          DateTime?         @map("ack_at") // dedup across channels (Plan 4)
+
   @@map("checklist_items")
+}
+
+model InviteToken {
+  token      String         @id // long crypto-random
+  projectId  String         @map("project_id")
+  project    WeddingProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  role       String         @default("partner")
+  expiresAt  DateTime       @map("expires_at")
+  acceptedAt DateTime?      @map("accepted_at")
+  revokedAt  DateTime?      @map("revoked_at")
+  createdAt  DateTime       @default(now()) @map("created_at")
+
+  @@map("invite_tokens")
 }
