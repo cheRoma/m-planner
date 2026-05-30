@@ -5,7 +5,7 @@ import { ReminderScheduler } from "./reminder-scheduler";
 import { ReminderDelivery, type SendFn } from "./reminder-delivery";
 import { DeadlinesService } from "./deadlines.service";
 import { NotificationController } from "./notification.controller";
-import { sendReminder, makeBot } from "../../../bot/src/bot";
+import { sendReminder, makeBot } from "@m/bot";
 
 const REMINDER_QUEUE = "reminders";
 function conn() { const u = new URL(process.env.REDIS_URL ?? "redis://localhost:6379"); return { host: u.hostname, port: Number(u.port || 6379) }; }

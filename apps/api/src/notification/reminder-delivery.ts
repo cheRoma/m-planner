@@ -1,6 +1,6 @@
 import { Injectable, Inject } from "@nestjs/common";
 import type { PrismaClient } from "@m/db";
-import { BotBlockedError, BotRateLimitError } from "../../../bot/src/bot";
+import { BotBlockedError, BotRateLimitError } from "@m/bot";
 
 export type DeliveryOutcome = "sent" | "blocked" | "failed" | "skipped";
 export type SendFn = (telegramId: number, text: string) => Promise<"sent">;
